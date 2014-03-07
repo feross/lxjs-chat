@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "instant.io",
+  "description": "Talk to strangers! (P2P video chat using WebRTC)",
+  "version": "1.1.0",
+  "author": "Feross Aboukhadijeh <feross@feross.org> (http://feross.org/)",
+  "bugs": {
+    "url": "https://github.com/feross/instant.io/issues"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "homepage": "http://feross.org",
+  "keywords": [
+    "p2p",
+    "video chat"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/feross/instant.io.git"
+  },
+  "scripts": {
+  }
+}
