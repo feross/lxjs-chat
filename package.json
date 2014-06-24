@@ -8,12 +8,22 @@
     "url": "https://github.com/feross/instant.io/issues"
   },
   "dependencies": {
+    "express": "^3.5.0",
+    "hat": "0.0.3",
+    "inherits": "^2.0.1",
+    "jade": "^1.3.0",
+    "nib": "^1.0.2",
+    "stylus": "^0.46.3",
+    "ws": "^0.4.31"
   },
   "devDependencies": {
+    "browserify": "^4.1.11"
   },
   "homepage": "http://feross.org",
   "keywords": [
     "p2p",
+    "webrtc",
+    "data channel",
     "video chat"
   ],
   "license": "MIT",
@@ -23,5 +33,13 @@
     "url": "git://github.com/feross/instant.io.git"
   },
   "scripts": {
+    "build": "npm run build-js && npm run build-css",
+    "build-css": "stylus -u nib public/css/style.styl -o public/css/ -c",
+    "build-js": "browserify public/js/index.js > public/js/bundle.js",
+    "install": "npm run build",
+    "start": "node app.js",
+    "watch": "npm run watch-js & npm run watch-css & nodemon -i public/ app.js",
+    "watch-css": "stylus -u nib public/css/style.styl -o public/css/ -w",
+    "watch-js": "watchify public/js/index.js -o public/js/bundle.js -dv"
   }
 }

@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  header
+    h1 instant.io
+    h2 Talk to strangers!
+  main
+    .cams
+      video.remote
+      video.local
+    .chat
+      .history
+        //- .remote Hey
+        //- .local Sup
+      .controls
+        form.text
+          input(type='text')
+        button.next Next
+        button.send Send
