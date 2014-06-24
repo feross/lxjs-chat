@@ -1,17 +1,38 @@
+var media = require('./media')
 var Peer = require('./peer')
 var Socket = require('./socket')
 
 var socket = new Socket()
 var peer
+var stream
+
+var $videoLocal = document.querySelector('video.local')
+var $videoRemote = document.querySelector('video.remote')
+var $next = document.querySelector('.next')
+var $chat = document.querySelector('form.text')
+var $send = document.querySelector('.send')
+var $textInput = document.querySelector('.text input')
+var $history = document.querySelector('.history')
 
 socket.on('error', function (err) {
   console.error('socket error', err.stack || err.message || err)
 })
 
+
 socket.on('ready', function () {
-  // TODO: ui changes
   socket.send({ type: 'hello' })
-  next()
+
+  // TODO: ui changes
+
+  media.getUserMedia(function (err, _stream) {
+    if (err) {
+      alert(err)
+    } else {
+      stream = _stream
+      media.showStream($videoLocal, stream)
+      next()
+    }
+  })
 })
 
 socket.on('peer', function (data) {
@@ -21,6 +42,8 @@ socket.on('peer', function (data) {
 
   peer = new Peer(data)
 
+  peer.addStream(stream)
+
   peer.on('error', function (err) {
     console.error('peer error', err.stack || err.message || err)
   })
@@ -29,6 +52,10 @@ socket.on('peer', function (data) {
   })
   peer.on('chat', function (data) {
     addChat(data, false)
+  })
+  peer.on('stream', function (stream) {
+    console.log('stream')
+    media.showStream($videoRemote, stream)
   })
 
   // useful for debugging
@@ -49,11 +76,6 @@ socket.on('end', function (data) {
   socket.send({ type: 'peer' })
 })
 
-var $next = document.querySelector('.next')
-var $chat = document.querySelector('form.text')
-var $send = document.querySelector('.send')
-var $textInput = document.querySelector('.text input')
-var $history = document.querySelector('.history')
 
 document.querySelector('.next').addEventListener('click', function (event) {
   event.preventDefault()

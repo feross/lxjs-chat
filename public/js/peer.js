@@ -17,7 +17,6 @@ var RTCIceCandidate = window.mozRTCIceCandidate
 
 var CONFIG = {
   iceServers: [ { url: 'stun:23.21.150.121' } ]
-  // iceServers: [ { url: 'stun:127.0.0.1' } ]
 }
 
 var CONSTRAINTS = {}
@@ -49,6 +48,7 @@ Peer.prototype._init = function (opts) {
 
   var self = this
   this._pc.onnegotiationneeded = function (event) {
+    console.log('negotationneeded')
     self._pc.createOffer(function (offer) {
       self._pc.setLocalDescription(offer)
       self.emit('signal', offer)
@@ -59,6 +59,11 @@ Peer.prototype._init = function (opts) {
     if (event.candidate) {
       self.emit('signal', { candidate: event.candidate })
     }
+  }
+
+  this._pc.onaddstream = function (event) {
+    var stream = event.stream
+    self.emit('stream', stream)
   }
 
   // Useful for debugging
@@ -128,6 +133,11 @@ Peer.prototype.signal = function (data) {
   } else {
     self.emit('error', new Error('signal() called with invalid signal data'))
   }
+}
+
+Peer.prototype.addStream = function (stream) {
+  if (!this._pc) return
+  this._pc.addStream(stream)
 }
 
 Peer.prototype.send = function (data) {

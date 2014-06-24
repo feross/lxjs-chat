@@ -29,7 +29,7 @@ Socket.prototype._onerror = function (err) {
 }
 
 Socket.prototype._onmessage = function (event) {
-  console.log('[websocket] ' + event.data)
+  console.log('[websocket receive] ' + event.data)
   this.emit('message', event.data)
   try {
     var message = JSON.parse(event.data)
@@ -47,9 +47,9 @@ Socket.prototype._onclose = function () {
 Socket.prototype.send = function (message) {
   if (this._ws && this._ws.readyState === 1) { // TODO: use constant
     if (typeof message === 'object') {
-      this._ws.send(JSON.stringify(message))
-    } else {
-      this._ws.send(message)
+      message = JSON.stringify(message)
     }
+    console.log('[websocket send] ' + message)
+    this._ws.send(message)
   }
 }

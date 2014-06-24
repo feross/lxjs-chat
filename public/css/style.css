@@ -44,8 +44,9 @@ header h2 {
 }
 .cams .remote,
 .cams .local {
+  display: block;
   border: 1px solid #f00;
-  height: 250px;
+  width: 400px;
 }
 .chat {
   position: absolute;
