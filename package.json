@@ -8,11 +8,13 @@
     "url": "https://github.com/feross/instant.io/issues"
   },
   "dependencies": {
+    "custom-error": "^0.1.1",
     "express": "^3.5.0",
     "hat": "0.0.3",
     "inherits": "^2.0.1",
     "jade": "^1.3.0",
     "nib": "^1.0.2",
+    "once": "^1.3.0",
     "stylus": "^0.46.3",
     "ws": "^0.4.31"
   },

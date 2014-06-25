@@ -1,14 +1,16 @@
+var customError = require('custom-error')
+
+var NavigatorUserMediaError = customError('NavigatorUserMediaError')
+
 var getUserMedia = window.navigator.getUserMedia
   || window.navigator.webkitGetUserMedia
   || window.navigator.mozGetUserMedia
   || window.navigator.msGetUserMedia
 
-var DEFAULT_CONSTRAINTS = { video: true, audio: true }
-
 exports.getUserMedia = function (constraints, cb) {
   if (typeof constraints === 'function') {
     cb = constraints
-    constraints = DEFAULT_CONSTRAINTS
+    constraints = { video: true, audio: true }
   }
 
   function success (stream) {
@@ -16,8 +18,15 @@ exports.getUserMedia = function (constraints, cb) {
   }
 
   function fail (err) {
-    // TODO: test in Firefox
-    // see: https://github.com/HenrikJoreteg/getUserMedia/blob/master/index-browser.js
+    // Firefox returns strings instead of error objects.
+    if (err === 'PERMISSION_DENIED') {
+      err = new NavigatorUserMediaError()
+      err.name = 'PermissionDeniedError'
+    } else if (err === 'CONSTRAINT_NOT_SATISFIED') {
+      err = new NavigatorUserMediaError()
+      err.name = 'ConstraintNotSatisfiedError'
+    }
+
     cb(err)
   }
 

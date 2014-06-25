@@ -46,7 +46,7 @@ function onclose () {
 }
 
 function onmessage (data) {
-  console.log('[' + this.id + '] ' + data)
+  console.log('[' + this.id + ' receive] ' + data + '\n')
   try {
     var message = JSON.parse(data)
   } catch (e) {

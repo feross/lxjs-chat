@@ -36,13 +36,16 @@ socket.on('ready', function () {
 })
 
 socket.on('peer', function (data) {
+  data = data || {}
+
   if (peer) {
-    peer.destroy()
+    peer.close()
   }
 
-  peer = new Peer(data)
-
-  peer.addStream(stream)
+  peer = new Peer({
+    initiator: !!data.initiator,
+    stream: stream
+  })
 
   peer.on('error', function (err) {
     console.error('peer error', err.stack || err.message || err)
@@ -50,12 +53,19 @@ socket.on('peer', function (data) {
   peer.on('signal', function (data) {
     socket.send({ type: 'signal', data: data })
   })
+
   peer.on('chat', function (data) {
     addChat(data, false)
   })
   peer.on('stream', function (stream) {
-    console.log('stream')
     media.showStream($videoRemote, stream)
+  })
+
+  peer.on('ready', function () {
+    // TODO: undisable the UI
+  })
+  peer.on('close', function () {
+    // TODO: Disable the UI
   })
 
   // useful for debugging
@@ -73,19 +83,19 @@ socket.on('signal', function (data) {
 })
 
 socket.on('end', function (data) {
-  socket.send({ type: 'peer' })
+  next()
 })
 
 
 document.querySelector('.next').addEventListener('click', function (event) {
   event.preventDefault()
+  if (peer) {
+    socket.send({ type: 'end' })
+  }
   next()
 })
 
 function next () {
-  if (peer) {
-    socket.send({ type: 'end' })
-  }
   socket.send({ type: 'peer' })
 }
 
@@ -103,6 +113,6 @@ function send (event) {
 function addChat (text, local) {
   var node = document.createElement('div')
   node.className = local ? 'local' : 'remote'
-  node.innerText = text
+  node.textContent = text
   $history.appendChild(node)
 }

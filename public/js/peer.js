@@ -2,6 +2,7 @@ module.exports = Peer
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
+var once = require('once')
 
 var RTCPeerConnection = window.mozRTCPeerConnection
   || window.RTCPeerConnection
@@ -29,41 +30,48 @@ function Peer (opts) {
   this._init(opts)
 }
 
-Peer.prototype.destroy = function () {
-  // TODO: what methods actually kill the pc and channel?
+Peer.prototype.close = function () {
+  this.emit = function () {}
+
+  this._pc.close()
+  this._channel.close()
+
   this._pc = null
   this._channel = null
-  this.emit = function () {} // kill all future events
+
+  this.emit('close')
 }
 
 Peer.prototype._init = function (opts) {
   opts = opts || {}
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
-  if (opts.initiator) {
-    this._setupData()
-  } else {
-    this._pc.ondatachannel = this._setupData.bind(this)
-  }
+  this._setupVideo(opts.stream)
 
   var self = this
-  this._pc.onnegotiationneeded = function (event) {
-    console.log('negotationneeded')
-    self._pc.createOffer(function (offer) {
-      self._pc.setLocalDescription(offer)
-      self.emit('signal', offer)
-    }, self._onerror.bind(self))
+  if (opts.initiator) {
+    this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
+
+    this._pc.onnegotiationneeded = once(function (event) {
+      console.log('negotationneeded')
+      self._pc.createOffer(function (offer) {
+        self._pc.setLocalDescription(offer)
+        self.emit('signal', offer)
+      }, self._onerror.bind(self))
+    })
+
+    if (window.mozRTCPeerConnection) {
+      // Firefox does not trigger this event automatically
+      setTimeout(this._pc.onnegotiationneeded.bind(this._pc), 0)
+    }
+  } else {
+    this._pc.ondatachannel = this._setupData.bind(this)
   }
 
   this._pc.onicecandidate = function (event) {
     if (event.candidate) {
       self.emit('signal', { candidate: event.candidate })
     }
-  }
-
-  this._pc.onaddstream = function (event) {
-    var stream = event.stream
-    self.emit('stream', stream)
   }
 
   // Useful for debugging
@@ -76,9 +84,8 @@ Peer.prototype._init = function (opts) {
 }
 
 Peer.prototype._setupData = function (event) {
-  this._channel = event
-    ? event.channel
-    : this._pc.createDataChannel(CHANNEL_NAME)
+  console.log('setupData', event)
+  this._channel = event.channel
 
   var self = this
   this._channel.onopen = function (event) {
@@ -94,11 +101,15 @@ Peer.prototype._setupData = function (event) {
     }
     self.emit(message.type, message.data)
   }
+}
 
-  if (window.mozRTCPeerConnection && this.initiator) {
-    // Firefox does not trigger this event automatically
-    // TODO: verify
-    setTimeout(this._pc.onnegotiationneeded.bind(this._pc), 0)
+Peer.prototype._setupVideo = function (stream) {
+  this._pc.addStream(stream)
+
+  var self = this
+  this._pc.onaddstream = function (event) {
+    var stream = event.stream
+    self.emit('stream', stream)
   }
 }
 
@@ -133,11 +144,6 @@ Peer.prototype.signal = function (data) {
   } else {
     self.emit('error', new Error('signal() called with invalid signal data'))
   }
-}
-
-Peer.prototype.addStream = function (stream) {
-  if (!this._pc) return
-  this._pc.addStream(stream)
 }
 
 Peer.prototype.send = function (data) {
