@@ -21,7 +21,7 @@ socket.on('error', function (err) {
   console.error('[socket error]', err.stack || err.message || err)
 })
 
-socket.on('ready', function () {
+socket.once('ready', function () {
   socket.send({ type: 'hello' })
 
   addChat('Please allow access to your webcam. Show the world your smile!', 'status')
