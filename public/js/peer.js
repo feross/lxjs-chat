@@ -27,33 +27,8 @@ var CHANNEL_NAME = 'instant.io'
 inherits(Peer, EventEmitter)
 
 function Peer (opts) {
-  this._init(opts || {})
-}
+  opts = opts || {}
 
-Peer.prototype.close = function () {
-  if (this._pc) {
-    try {
-      this._pc.close()
-    } catch (err) {}
-
-    this._pc.oniceconnectionstatechange = null
-    this._pc.onsignalingstatechange = null
-    this._pc.onicecandidate = null
-  }
-
-  if (this._channel) {
-    try {
-      this._channel.close()
-    } catch (err) {}
-
-    this._channel.onmessage = null
-  }
-
-  this._pc = null
-  this._channel = null
-}
-
-Peer.prototype._init = function (opts) {
   this.ready = false
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
@@ -101,12 +76,35 @@ Peer.prototype._init = function (opts) {
   }
 }
 
+Peer.prototype.close = function () {
+  if (this._pc) {
+    try {
+      this._pc.close()
+    } catch (err) {}
+
+    this._pc.oniceconnectionstatechange = null
+    this._pc.onsignalingstatechange = null
+    this._pc.onicecandidate = null
+  }
+
+  if (this._channel) {
+    try {
+      this._channel.close()
+    } catch (err) {}
+
+    this._channel.onmessage = null
+  }
+
+  this._pc = null
+  this._channel = null
+}
+
 Peer.prototype._setupData = function (event) {
   this._channel = event.channel
 
   var self = this
   this._channel.onmessage = function (event) {
-    // console.log('[datachannel] ' + event.data)
+    console.log('[datachannel] ' + event.data)
     self.emit('message', event.data)
     try {
       var message = JSON.parse(event.data)
