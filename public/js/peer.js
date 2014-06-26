@@ -31,21 +31,21 @@ function Peer (opts) {
 }
 
 Peer.prototype.close = function () {
-  try {
-    this._pc.close()
-  } catch (err) {}
-
-  try {
-    this._channel.close()
-  } catch (err) {}
-
   if (this._pc) {
+    try {
+      this._pc.close()
+    } catch (err) {}
+
     this._pc.oniceconnectionstatechange = null
     this._pc.onsignalingstatechange = null
     this._pc.onicecandidate = null
   }
 
   if (this._channel) {
+    try {
+      this._channel.close()
+    } catch (err) {}
+
     this._channel.onmessage = null
   }
 
