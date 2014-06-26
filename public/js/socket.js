@@ -63,7 +63,7 @@ Socket.prototype._onclose = function () {
 }
 
 Socket.prototype.send = function (message) {
-  if (this._ws && this._ws.readyState === 1) { // TODO: use constant
+  if (this._ws && this._ws.readyState === WebSocket.OPEN) {
     if (typeof message === 'object') {
       message = JSON.stringify(message)
     }
