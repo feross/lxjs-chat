@@ -3,7 +3,7 @@ module.exports = Socket
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
 
-var HOST = 'ws://' + window.location.hostname + ':3000'
+var HOST = 'ws://' + window.location.host
 var RECONNECT_TIMEOUT = 3000
 
 inherits(Socket, EventEmitter)
