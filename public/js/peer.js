@@ -111,7 +111,7 @@ Peer.prototype._setupData = function (event) {
     } catch (err) {
       return
     }
-    self.emit(message.type, message.data)
+    self.emit('message:' + message.type, message.data)
   }
 }
 

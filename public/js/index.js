@@ -2,10 +2,6 @@ var media = require('./media')
 var Peer = require('./peer')
 var Socket = require('./socket')
 
-var socket = new Socket()
-var peer
-var stream
-
 var $chat = document.querySelector('form.text')
 var $count = document.querySelector('.count')
 var $history = document.querySelector('.history')
@@ -14,115 +10,6 @@ var $send = document.querySelector('.send')
 var $textInput = document.querySelector('.text input')
 var $videoLocal = document.querySelector('video.local')
 var $videoRemote = document.querySelector('video.remote')
-
-disableUI()
-
-socket.on('error', function (err) {
-  console.error('[socket error]', err.stack || err.message || err)
-})
-
-socket.once('ready', function () {
-  socket.send({ type: 'hello' })
-
-  addChat('Please allow access to your webcam. Show the world your smile!', 'status')
-  media.getUserMedia(function (err, _stream) {
-    if (err) {
-      alert('You must share your webcam to use this app!')
-    } else {
-      stream = _stream
-      media.showStream($videoLocal, stream)
-      next()
-    }
-  })
-})
-
-socket.on('peer', function (data) {
-  data = data || {}
-
-
-  peer = new Peer({
-    initiator: !!data.initiator,
-    stream: stream
-  })
-
-  peer.on('error', function (err) {
-    console.error('peer error', err.stack || err.message || err)
-  })
-  peer.on('signal', function (data) {
-    socket.send({ type: 'signal', data: data })
-  })
-
-  peer.on('chat', function (data) {
-    addChat(data, 'remote')
-  })
-  peer.on('stream', function (stream) {
-    media.showStream($videoRemote, stream)
-  })
-
-  peer.on('ready', function () {
-    addChat('Connected!', 'status')
-    enableUI()
-  })
-  peer.on('close', function () {
-    next()
-  })
-
-  // useful for debugging
-  peer.on('iceconnectionstatechange', function (iceGatheringState, iceConnectionState) {
-    console.log('[iceconnectionstatechange] ', iceGatheringState, iceConnectionState)
-  })
-  peer.on('signalingstatechange', function (signalingState, readyState) {
-    console.log('[signalingstatechange] ', signalingState, readyState)
-  })
-
-})
-
-socket.on('signal', function (data) {
-  peer.signal(data)
-})
-
-socket.on('end', function () {
-  next()
-})
-
-socket.on('count', function (count) {
-  $count.textContent = count
-})
-
-document.querySelector('.next').addEventListener('click', function (event) {
-  event.preventDefault()
-  next()
-})
-
-function next () {
-  if (peer) {
-    socket.send({ type: 'end' })
-    peer.close()
-  }
-  socket.send({ type: 'peer' })
-
-  disableUI()
-  $history.innerHTML = ''
-  addChat('Finding a peer...', 'status')
-}
-
-$chat.addEventListener('submit', send)
-$send.addEventListener('click', send)
-
-function send (event) {
-  event.preventDefault()
-  var text = $textInput.value
-  addChat(text, 'local')
-  peer.send({ type: 'chat', data: text })
-  $textInput.value = ''
-}
-
-function addChat (text, className) {
-  var node = document.createElement('div')
-  node.className = className
-  node.textContent = text
-  $history.appendChild(node)
-}
 
 function disableUI () {
   $textInput.disabled = true
@@ -135,4 +22,108 @@ function enableUI () {
   $send.disabled = false
   $next.disabled = false
   $textInput.focus()
+}
+
+disableUI()
+
+function addChat (text, className) {
+  var node = document.createElement('div')
+  node.textContent = text
+  node.className = className
+  $history.appendChild(node)
+}
+
+function clearChat () {
+  $history.innerHTML = ''
+}
+
+var peer, stream
+var socket = new Socket()
+
+socket.on('error', function (err) {
+  console.error('[socket error]', err.stack || err.message || err)
+})
+
+socket.once('ready', function () {
+  addChat('Please allow access to your webcam. Remember to smile!', 'status')
+  media.getUserMedia(function (err, s) {
+    if (err) {
+      alert('You must share your webcam to use this app!')
+    } else {
+      stream = s
+      media.showStream($videoLocal, stream)
+      next()
+    }
+  })
+})
+
+function next (event) {
+  if (event && event.preventDefault) {
+    event.preventDefault()
+  }
+  if (peer) {
+    socket.send({ type: 'end' })
+    peer.close()
+  }
+  socket.send({ type: 'peer' })
+
+  disableUI()
+  clearChat()
+  addChat('Finding a peer...', 'status')
+}
+
+$next.addEventListener('click', next)
+socket.on('message:end', next)
+
+socket.on('message:peer', function (data) {
+  data = data || {}
+
+  peer = new Peer({
+    initiator: !!data.initiator,
+    stream: stream
+  })
+
+  peer.on('error', function (err) {
+    console.error('peer error', err.stack || err.message || err)
+  })
+
+  peer.on('ready', function () {
+    clearChat()
+    addChat('Connected, say hello!', 'status')
+    enableUI()
+  })
+
+  peer.on('signal', function (data) {
+    socket.send({ type: 'signal', data: data })
+  })
+
+  peer.on('stream', function (stream) {
+    media.showStream($videoRemote, stream)
+  })
+
+  peer.on('message:chat', function (data) {
+    addChat(data, 'remote')
+  })
+
+  // Takes ~3 seconds before this event fires when peerconnection is dead (timeout)
+  peer.on('close', next)
+})
+
+socket.on('message:signal', function (data) {
+  peer.signal(data)
+})
+
+socket.on('message:count', function (count) {
+  $count.textContent = count
+})
+
+$chat.addEventListener('submit', send)
+$send.addEventListener('click', send)
+
+function send (event) {
+  event.preventDefault()
+  var text = $textInput.value
+  addChat(text, 'local')
+  peer.send({ type: 'chat', data: text })
+  $textInput.value = ''
 }
