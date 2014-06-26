@@ -27,7 +27,12 @@ Socket.prototype._onopen = function () {
 
 Socket.prototype._onerror = function (err) {
   this.emit('error', err)
+
+  // On error, close socket...
   this.close()
+
+  // ...and try to reconnect after a timeout
+  setTimeout(this._init.bind(this), RECONNECT_TIMEOUT)
 }
 
 Socket.prototype.close = function () {
@@ -46,7 +51,7 @@ Socket.prototype._onmessage = function (event) {
   } catch (err) {
     return
   }
-  this.emit(message.type, message.data)
+  this.emit('message:' + message.type, message.data)
 }
 
 Socket.prototype._onclose = function () {
@@ -57,9 +62,6 @@ Socket.prototype._onclose = function () {
     this._ws.onclose = null
   }
   this._ws = null
-
-  // Socket should never close, so if it does, automatically reconnect
-  setTimeout(this._init.bind(this), RECONNECT_TIMEOUT)
 }
 
 Socket.prototype.send = function (message) {
