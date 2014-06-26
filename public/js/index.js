@@ -24,9 +24,10 @@ socket.on('error', function (err) {
 socket.on('ready', function () {
   socket.send({ type: 'hello' })
 
+  addChat('Please allow access to your webcam. Show the world your smile!', 'status')
   media.getUserMedia(function (err, _stream) {
     if (err) {
-      alert('Don\'t be shy! Show the world your smile!')
+      alert('You must share your webcam to use this app!')
     } else {
       stream = _stream
       media.showStream($videoLocal, stream)
