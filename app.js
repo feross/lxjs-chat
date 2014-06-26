@@ -1,27 +1,22 @@
-var express = require('express')
 var hat = require('hat')
 var http = require('http')
+var static = require('node-static')
 var ws = require('ws')
 
 var PORT = process.argv[2] || 3000
 
-var app = express()
-var httpServer = http.createServer(app)
+var httpServer = http.createServer()
+var staticServer = new static.Server('./public')
 var wsServer = new ws.Server({ server: httpServer })
+
 var peers = {}
 var waitingId = null
 var count = 0
 
-// setup express
-app.set('views', __dirname + '/views')
-app.set('view engine', 'jade')
-app.use(express.logger('dev'))
-app.use(express.static(__dirname + '/public'))
-app.use(express.errorHandler())
-
-// setup routes
-app.get('/', function (req, res) {
-  res.render('index', { title: 'Instant.io - Talk with strangers!' })
+httpServer.on('request', function (req, res) {
+  req.addListener('end', function () {
+    staticServer.serve(req, res)
+  }).resume()
 })
 
 wsServer.on('connection', onconnection)
@@ -59,10 +54,7 @@ function onmessage (data) {
     return
   }
 
-  if (message.type === 'hello') {
-    this.send(JSON.stringify({ type: 'hello' }))
-
-  } else if (message.type === 'peer') {
+  if (message.type === 'peer') {
     if (waitingId && waitingId !== this.id) {
       var peer = peers[waitingId]
 
