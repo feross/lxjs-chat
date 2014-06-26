@@ -16,12 +16,12 @@ function Socket () {
 Socket.prototype._init = function () {
   this._ws = new WebSocket(HOST)
   this._ws.onopen = this._onopen.bind(this)
+  this._ws.onmessage = this._onmessage.bind(this)
+  this._ws.onclose = this._onclose.bind(this)
   this._ws.onerror = once(this._onerror.bind(this))
 }
 
 Socket.prototype._onopen = function () {
-  this._ws.onmessage = this._onmessage.bind(this)
-  this._ws.onclose = this._onclose.bind(this)
   this.emit('ready')
 }
 
@@ -31,18 +31,11 @@ Socket.prototype._onerror = function (err) {
 }
 
 Socket.prototype.close = function () {
-  if (this._ws) {
-    try {
-      this._ws.close()
-    } catch (err) {}
-
-    this._ws.onopen = null
-    this._ws.onerror = null
-    this._ws.onmessage = null
-    this._ws.onclose = null
+  try {
+    this._ws.close()
+  } catch (err) {
+    this._onclose()
   }
-
-  this._ws = null
 }
 
 Socket.prototype._onmessage = function (event) {
@@ -56,8 +49,16 @@ Socket.prototype._onmessage = function (event) {
   this.emit(message.type, message.data)
 }
 
-// Socket should never close, so if it does, automatically reconnect
 Socket.prototype._onclose = function () {
+  if (this._ws) {
+    this._ws.onopen = null
+    this._ws.onerror = null
+    this._ws.onmessage = null
+    this._ws.onclose = null
+  }
+  this._ws = null
+
+  // Socket should never close, so if it does, automatically reconnect
   setTimeout(this._init.bind(this), RECONNECT_TIMEOUT)
 }
 
