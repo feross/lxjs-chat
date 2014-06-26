@@ -27,33 +27,65 @@ var CHANNEL_NAME = 'instant.io'
 inherits(Peer, EventEmitter)
 
 function Peer (opts) {
-  this._init(opts)
+  this._init(opts || {})
 }
 
 Peer.prototype.close = function () {
-  this.emit = function () {}
+  try {
+    this._pc.close()
+  } catch (err) {}
 
-  this._pc.close()
-  this._channel.close()
+  try {
+    this._channel.close()
+  } catch (err) {}
+
+  if (this._pc) {
+    this._pc.oniceconnectionstatechange = null
+    this._pc.onsignalingstatechange = null
+    this._pc.onicecandidate = null
+  }
+
+  if (this._channel) {
+    this._channel.onmessage = null
+  }
 
   this._pc = null
   this._channel = null
-
-  this.emit('close')
 }
 
 Peer.prototype._init = function (opts) {
-  opts = opts || {}
+  this.ready = false
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
+
+  var self = this
+  this._pc.oniceconnectionstatechange = function (event) {
+    self.emit('iceconnectionstatechange', self._pc.iceGatheringState, self._pc.iceConnectionState)
+    if (self._pc.iceConnectionState === 'connected' || self._pc.iceConnectionState === 'completed') {
+      if (!self.ready) {
+        self.ready = true
+        self.emit('ready')
+      }
+    }
+    if (self._pc.iceConnectionState === 'disconnected') {
+      self.emit('close')
+    }
+  }
+  this._pc.onsignalingstatechange = function (event) {
+    self.emit('signalingstatechange', self._pc.signalingState, self._pc.readyState)
+  }
+
+  this._pc.onicecandidate = function (event) {
+    if (event.candidate) {
+      self.emit('signal', { candidate: event.candidate })
+    }
+  }
 
   this._setupVideo(opts.stream)
 
-  var self = this
   if (opts.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
 
     this._pc.onnegotiationneeded = once(function (event) {
-      console.log('negotationneeded')
       self._pc.createOffer(function (offer) {
         self._pc.setLocalDescription(offer)
         self.emit('signal', offer)
@@ -67,32 +99,14 @@ Peer.prototype._init = function (opts) {
   } else {
     this._pc.ondatachannel = this._setupData.bind(this)
   }
-
-  this._pc.onicecandidate = function (event) {
-    if (event.candidate) {
-      self.emit('signal', { candidate: event.candidate })
-    }
-  }
-
-  // Useful for debugging
-  this._pc.onicechange = function (event) {
-    self.emit('icechange', self._pc.iceGatheringState, self._pc.iceConnectionState)
-  }
-  this._pc.onstatechange = function (event) {
-    self.emit('statechange', self._pc.signalingState, self._pc.readyState)
-  }
 }
 
 Peer.prototype._setupData = function (event) {
-  console.log('setupData', event)
   this._channel = event.channel
 
   var self = this
-  this._channel.onopen = function (event) {
-    self.emit('ready')
-  }
   this._channel.onmessage = function (event) {
-    console.log('[datachannel] ' + event.data)
+    // console.log('[datachannel] ' + event.data)
     self.emit('message', event.data)
     try {
       var message = JSON.parse(event.data)

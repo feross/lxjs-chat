@@ -27,6 +27,8 @@ header
     color: FireBrick
   h2
     margin-top: 23px
+  .online
+    float: right
 
 .cams
   background-color: MistyRose
@@ -38,7 +40,6 @@ header
 
   .remote, .local
     display: block
-    border: 1px solid red
     width: 400px
 
 .chat
@@ -52,19 +53,21 @@ header
     background-color: Ivory
     padding: 10px
     height: 100%
+    font-size: 18px
 
-    .local, .remote
-      font-size: 18px
+    *
       margin: 10px
-      &:before
-        font-weight: bold
 
     .remote:before
       content: 'Stranger: '
       color: Tomato
+      font-weight: bold
     .local:before
       content: 'Me: '
       color: RoyalBlue
+      font-weight: bold
+    .status
+      font-style: italic
 
   .controls
     position: absolute

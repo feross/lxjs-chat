@@ -10,6 +10,7 @@ var httpServer = http.createServer(app)
 var wsServer = new ws.Server({ server: httpServer })
 var peers = {}
 var waitingId = null
+var count = 0
 
 // setup express
 app.set('views', __dirname + '/views')
@@ -31,6 +32,8 @@ function onconnection (peer) {
   peer.on('close', onclose.bind(peer))
   peer.on('error', onclose.bind(peer))
   peer.on('message', onmessage.bind(peer))
+  count += 1
+  broadcast(JSON.stringify({ type: 'count', data: count }))
 }
 
 function onclose () {
@@ -43,6 +46,8 @@ function onclose () {
     peer.peerId = null
     peer.send(JSON.stringify({ type: 'end' }), onsend)
   }
+  count -= 1
+  broadcast(JSON.stringify({ type: 'count', data: count }))
 }
 
 function onmessage (data) {
@@ -99,6 +104,15 @@ function onmessage (data) {
 
 function onsend (err) {
   if (err) console.error(err.stack || err.message || err)
+}
+
+function broadcast (message) {
+  for (var id in peers) {
+    var peer = peers[id]
+    if (peer) {
+      peer.send(message)
+    }
+  }
 }
 
 httpServer.listen(PORT, function () {

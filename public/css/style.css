@@ -34,6 +34,9 @@ header h1 {
 header h2 {
   margin-top: 23px;
 }
+header .online {
+  float: right;
+}
 .cams {
   background-color: MistyRose;
   position: absolute;
@@ -45,7 +48,6 @@ header h2 {
 .cams .remote,
 .cams .local {
   display: block;
-  border: 1px solid #f00;
   width: 400px;
 }
 .chat {
@@ -59,23 +61,23 @@ header h2 {
   background-color: Ivory;
   padding: 10px;
   height: 100%;
-}
-.chat .history .local,
-.chat .history .remote {
   font-size: 18px;
-  margin: 10px;
 }
-.chat .history .local:before,
-.chat .history .remote:before {
-  font-weight: bold;
+.chat .history * {
+  margin: 10px;
 }
 .chat .history .remote:before {
   content: 'Stranger: ';
   color: Tomato;
+  font-weight: bold;
 }
 .chat .history .local:before {
   content: 'Me: ';
   color: RoyalBlue;
+  font-weight: bold;
+}
+.chat .history .status {
+  font-style: italic;
 }
 .chat .controls {
   position: absolute;
