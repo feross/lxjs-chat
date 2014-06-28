@@ -22,6 +22,13 @@ httpServer.on('request', function (req, res) {
 wsServer.on('connection', onconnection)
 
 function onconnection (peer) {
+  var send = peer.send
+  peer.send = function () {
+    try {
+      send.apply(peer, arguments)
+    } catch (err) {}
+  }
+
   peer.id = hat()
   peers[peer.id] = peer
   peer.on('close', onclose.bind(peer))
