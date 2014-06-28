@@ -55,9 +55,11 @@ function Peer (opts) {
     }
   }
 
+  // video stream is one-way
   this._setupVideo(opts.stream)
 
   if (opts.initiator) {
+    // data channel is two-way
     this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
 
     this._pc.onnegotiationneeded = once(function (event) {
