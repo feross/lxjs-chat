@@ -1,5 +1,5 @@
 var media = require('./media')
-var Peer = require('./peer')
+var Peer = require('simple-peer')
 var Socket = require('./socket')
 
 var $chat = document.querySelector('form.text')
@@ -45,7 +45,7 @@ socket.on('error', function (err) {
 })
 
 socket.once('ready', function () {
-  addChat('Please allow access to your webcam. Remember to smile!', 'status')
+  addChat('Please grant access to your webcam. Remember to smile!', 'status')
   media.getUserMedia(function (err, s) {
     if (err) {
       alert('You must share your webcam to use this app!')

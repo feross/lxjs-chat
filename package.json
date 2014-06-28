@@ -13,6 +13,7 @@
     "inherits": "^2.0.1",
     "node-static": "^0.7.3",
     "once": "^1.3.0",
+    "simple-peer": "^1.0.0",
     "ws": "^0.4.31"
   },
   "devDependencies": {
@@ -35,6 +36,6 @@
     "build": "browserify public/js/index.js > public/js/bundle.js",
     "install": "npm run build",
     "start": "node app.js",
-    "watch": "watchify public/js/index.js -o public/js/bundle.js -dv & nodemon -i public/ app.js"
+    "watch": "watchify public/js/index.js -o public/js/bundle.js -dv & nodemon app.js"
   }
 }
