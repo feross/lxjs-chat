@@ -1,4 +1,4 @@
-# instant.io
+# lxjs-chat
 
 Talk to strangers! (P2P video chat using WebRTC)
 
