@@ -14,7 +14,7 @@ var $videoRemote = document.querySelector('video.remote')
 function disableUI () {
   $textInput.disabled = true
   $send.disabled = true
-  $next.disabled = true
+  // $next.disabled = true
 }
 
 function enableUI () {
