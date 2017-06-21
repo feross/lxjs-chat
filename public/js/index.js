@@ -1,6 +1,6 @@
 var media = require('./media')
 var Peer = require('simple-peer')
-var Socket = require('./socket')
+var Socket = require('simple-websocket')
 
 var $chat = document.querySelector('form.text')
 var $count = document.querySelector('.count')
@@ -38,17 +38,17 @@ function clearChat () {
 }
 
 var peer, stream
-var socket = new Socket()
+var socket = new Socket({ url: 'ws://' + window.location.host })
 
 socket.on('error', function (err) {
   console.error('[socket error]', err.stack || err.message || err)
 })
 
-socket.once('ready', function () {
+socket.once('connect', function () {
   addChat('Please grant access to your webcam. Remember to smile!', 'status')
   media.getUserMedia(function (err, s) {
     if (err) {
-      alert('You must share your webcam to use this app!')
+      window.alert('You must share your webcam to use this app!')
     } else {
       stream = s
       media.showStream($videoLocal, stream)
@@ -62,10 +62,10 @@ function next (event) {
     event.preventDefault()
   }
   if (peer) {
-    socket.send({ type: 'end' })
+    socket.send(JSON.stringify({ type: 'end' }))
     peer.close()
   }
-  socket.send({ type: 'peer' })
+  socket.send(JSON.stringify({ type: 'peer' }))
 
   disableUI()
   clearChat()
@@ -73,9 +73,8 @@ function next (event) {
 }
 
 $next.addEventListener('click', next)
-socket.on('message:end', next)
 
-socket.on('message:peer', function (data) {
+function handlePeer (data) {
   data = data || {}
 
   peer = new Peer({
@@ -87,34 +86,53 @@ socket.on('message:peer', function (data) {
     console.error('peer error', err.stack || err.message || err)
   })
 
-  peer.on('ready', function () {
+  peer.on('connect', function () {
     clearChat()
     addChat('Connected, say hello!', 'status')
     enableUI()
   })
 
   peer.on('signal', function (data) {
-    socket.send({ type: 'signal', data: data })
+    socket.send(JSON.stringify({ type: 'signal', data: data }))
   })
 
   peer.on('stream', function (stream) {
     media.showStream($videoRemote, stream)
   })
 
-  peer.on('message:chat', function (data) {
-    addChat(data, 'remote')
+  peer.on('data', function (message) {
+    addChat(message, 'remote')
   })
 
   // Takes ~3 seconds before this event fires when peerconnection is dead (timeout)
   peer.on('close', next)
-})
+}
 
-socket.on('message:signal', function (data) {
+function handleSignal (data) {
   peer.signal(data)
-})
+}
 
-socket.on('message:count', function (count) {
-  $count.textContent = count
+function handleCount (data) {
+  $count.textContent = data
+}
+
+socket.on('data', function (message) {
+  console.log('got socket message: ' + message)
+  try {
+    message = JSON.parse(message)
+  } catch (err) {
+    console.error('[socket error]', err.stack || err.message || err)
+  }
+
+  if (message.type === 'signal') {
+    handleSignal(message.data)
+  } else if (message.type === 'count') {
+    handleCount(message.data)
+  } else if (message.type === 'end') {
+    next()
+  } else if (message.type === 'peer') {
+    handlePeer(message.data)
+  }
 })
 
 $chat.addEventListener('submit', send)
@@ -124,6 +142,6 @@ function send (event) {
   event.preventDefault()
   var text = $textInput.value
   addChat(text, 'local')
-  peer.send({ type: 'chat', data: text })
+  peer.send(text)
   $textInput.value = ''
 }

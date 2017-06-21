@@ -3,7 +3,7 @@ var http = require('http')
 var nodeStatic = require('node-static')
 var ws = require('ws')
 
-var PORT = process.argv[2] || 3000
+var PORT = process.argv[2] || 4000
 
 var httpServer = http.createServer()
 var staticServer = new nodeStatic.Server('./public')
@@ -56,8 +56,8 @@ function onmessage (data) {
   console.log('[' + this.id + ' receive] ' + data + '\n')
   try {
     var message = JSON.parse(data)
-  } catch (e) {
-    console.error('Discarding non-JSON message')
+  } catch (err) {
+    console.error('Discarding non-JSON message: ' + err)
     return
   }
 

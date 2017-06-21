@@ -2,10 +2,10 @@ var customError = require('custom-error')
 
 var NavigatorUserMediaError = customError('NavigatorUserMediaError')
 
-var getUserMedia = navigator.getUserMedia
-  || navigator.webkitGetUserMedia
-  || navigator.mozGetUserMedia
-  || navigator.msGetUserMedia
+var getUserMedia = navigator.getUserMedia ||
+  navigator.webkitGetUserMedia ||
+  navigator.mozGetUserMedia ||
+  navigator.msGetUserMedia
 
 exports.getUserMedia = function (constraints, cb) {
   if (typeof constraints === 'function') {
