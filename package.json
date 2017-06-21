@@ -8,7 +8,7 @@
     "url": "https://github.com/feross/instant.io/issues"
   },
   "dependencies": {
-    "custom-error": "^0.1.1",
+    "custom-error": "^0.2.1",
     "hat": "0.0.3",
     "node-static": "^0.7.3",
     "simple-peer": "^8.1.0",
