@@ -1,12 +1,12 @@
 var hat = require('hat')
 var http = require('http')
-var static = require('node-static')
+var nodeStatic = require('node-static')
 var ws = require('ws')
 
 var PORT = process.argv[2] || 3000
 
 var httpServer = http.createServer()
-var staticServer = new static.Server('./public')
+var staticServer = new nodeStatic.Server('./public')
 var wsServer = new ws.Server({ server: httpServer })
 
 var peers = {}
@@ -83,19 +83,16 @@ function onmessage (data) {
     } else {
       waitingId = this.id
     }
-
   } else if (message.type === 'signal') {
     if (!this.peerId) return console.error('unexpected `signal` message')
     var peer = peers[this.peerId]
     peer.send(JSON.stringify({ type: 'signal', data: message.data }))
-
   } else if (message.type === 'end') {
     if (!this.peerId) return console.error('unexpected `end` message')
     var peer = peers[this.peerId]
     peer.peerId = null
     this.peerId = null
     peer.send(JSON.stringify({ type: 'end' }), onsend)
-
   } else {
     console.error('unknown message `type` ' + message.type)
   }
