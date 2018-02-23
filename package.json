@@ -11,14 +11,14 @@
     "custom-error": "^0.2.1",
     "hat": "0.0.3",
     "node-static": "^0.7.3",
-    "simple-peer": "^8.1.0",
-    "simple-websocket": "^5.0.2",
-    "ws": "^3.0.0"
+    "simple-peer": "^9.0.0",
+    "simple-websocket": "^7.0.1",
+    "ws": "^4.1.0"
   },
   "devDependencies": {
-    "browserify": "^14.0.0",
+    "browserify": "^16.1.0",
     "nodemon": "^1.11.0",
-    "standard": "^10.0.2",
+    "standard": "^11.0.0",
     "watchify": "^3.9.0"
   },
   "keywords": [
